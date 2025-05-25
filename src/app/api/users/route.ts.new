@@ -1,0 +1,33 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(req: NextRequest) {
+  try {
+    console.log('GET /api/users - Starting request');
+    
+    // Return dummy data for testing
+    const dummyUsers = [
+      {
+        id: '1',
+        name: 'Test User 1',
+        username: 'testuser1',
+        profileImage: null
+      },
+      {
+        id: '2',
+        name: 'Test User 2',
+        username: 'testuser2',
+        profileImage: null
+      }
+    ];
+    
+    console.log('Returning dummy data:', dummyUsers);
+    return NextResponse.json(dummyUsers);
+    
+  } catch (error) {
+    console.error('Error in GET /api/users:', error);
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
+  }
+}
