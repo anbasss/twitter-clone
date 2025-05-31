@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
 
   // Webpack configuration to handle file system issues
   webpack: (config, { isServer, dev }) => {
+    // Handle Prisma client properly
+    if (isServer) {
+      config.externals.push('@prisma/client');
+    }
+
     // Only apply these fixes in production builds
     if (!dev && isServer) {
       config.watchOptions = {
@@ -34,6 +39,9 @@ const nextConfig: NextConfig = {
 
     return config;
   },
+
+  // Output configuration for better Vercel deployment
+  output: 'standalone',
 };
 
 export default nextConfig;
