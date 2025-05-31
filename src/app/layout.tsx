@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthContext from "./context/AuthContext";
 import ToasterContext from "./context/ToasterContext";
+import SWRProvider from "./context/SWRContext";
 import ModalProvider from "./providers/ModalProvider";
 import Layout from "@/components/layout/Layout";
 
@@ -32,11 +33,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthContext>
-          <ToasterContext />
-          <ModalProvider />
-          <Layout>
-            {children}
-          </Layout>
+          <SWRProvider>
+            <ToasterContext />
+            <ModalProvider />
+            <Layout>
+              {children}
+            </Layout>
+          </SWRProvider>
         </AuthContext>
       </body>
     </html>

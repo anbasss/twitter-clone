@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/libs/auth";
 
 import prisma from "@/libs/prismadb";
 
@@ -11,9 +11,7 @@ export async function GET(req: NextRequest) {
 
     if (!postId) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
-    }
-
-    const comments = await prisma.comment.findMany({
+    }    const comments = await prisma.comment.findMany({
       where: {
         postId
       },
@@ -29,10 +27,15 @@ export async function GET(req: NextRequest) {
       },
       orderBy: {
         createdAt: 'desc'
-      }
+      },
+      take: 100, // Limit comments for better performance
     });
 
-    return NextResponse.json(comments);
+    return NextResponse.json(comments, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59'
+      }
+    });
   } catch (error) {
     console.log(error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

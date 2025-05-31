@@ -46,12 +46,9 @@ const RegisterModal = () => {
         })
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      const data = await response.json();      if (!response.ok) {
         toast.error(data.error || 'Something went wrong');
         return;
-        throw new Error(error.message || 'Something went wrong!');
       }
       
       toast.success('Account created.');

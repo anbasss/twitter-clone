@@ -1,54 +1,52 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id              String    @id @default(cuid())
+  id              String         @id @default(cuid())
   name            String?
-  username        String?   @unique
-  bio             String?   @db.Text
-  email           String?   @unique
+  username        String?        @unique
+  bio             String?
+  email           String?        @unique
   emailVerified   DateTime?
   image           String?
-  coverImage      String?   @db.LongText
-  profileImage    String?   @db.LongText
+  coverImage      String?
+  profileImage    String?
   hashedPassword  String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   hasNotification Boolean?
+  accounts        Account[]
+  comments        Comment[]
+  following       Follow[]       @relation("Follower")
+  followedBy      Follow[]       @relation("Following")
+  likedPosts      Like[]
+  notifications   Notification[]
+  posts           Post[]
+  sessions        Session[]
 
-  accounts      Account[]
-  sessions      Session[]
-  posts         Post[]
-  comments      Comment[]
-  notifications Notification[]
-  followedBy    Follow[]    @relation("Following")
-  following     Follow[]    @relation("Follower")
-  likedPosts    Like[]
+  @@index([email])
+  @@index([username])
 }
 
 model Post {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   body      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   userId    String
+  comments  Comment[]
+  likes     Like[]
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comments Comment[]
-  likes    Like[]
+  @@index([createdAt(sort: Desc)])
+  @@index([userId])
 }
 
 model Comment {
@@ -58,9 +56,12 @@ model Comment {
   updatedAt DateTime @updatedAt
   userId    String
   postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@index([postId])
+  @@index([createdAt(sort: Desc)])
+  @@index([userId])
 }
 
 model Notification {
@@ -68,8 +69,7 @@ model Notification {
   body      String
   userId    String
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -85,8 +85,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -103,9 +102,8 @@ model Follow {
   id          String @id @default(cuid())
   followerId  String
   followingId String
-  
-  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  follower    User   @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User   @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
 }
@@ -114,9 +112,10 @@ model Like {
   id     String @id @default(cuid())
   userId String
   postId String
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+  @@index([postId])
+  @@index([userId])
 }

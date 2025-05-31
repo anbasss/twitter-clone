@@ -199,72 +199,14 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
-};
-
-exports.Prisma.UserOrderByRelevanceFieldEnum = {
-  id: 'id',
-  name: 'name',
-  username: 'username',
-  bio: 'bio',
-  email: 'email',
-  image: 'image',
-  coverImage: 'coverImage',
-  profileImage: 'profileImage',
-  hashedPassword: 'hashedPassword'
-};
-
-exports.Prisma.PostOrderByRelevanceFieldEnum = {
-  id: 'id',
-  body: 'body',
-  userId: 'userId'
-};
-
-exports.Prisma.CommentOrderByRelevanceFieldEnum = {
-  id: 'id',
-  body: 'body',
-  userId: 'userId',
-  postId: 'postId'
-};
-
-exports.Prisma.NotificationOrderByRelevanceFieldEnum = {
-  id: 'id',
-  body: 'body',
-  userId: 'userId'
-};
-
-exports.Prisma.AccountOrderByRelevanceFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  type: 'type',
-  provider: 'provider',
-  providerAccountId: 'providerAccountId',
-  refresh_token: 'refresh_token',
-  access_token: 'access_token',
-  token_type: 'token_type',
-  scope: 'scope',
-  id_token: 'id_token',
-  session_state: 'session_state'
-};
-
-exports.Prisma.SessionOrderByRelevanceFieldEnum = {
-  id: 'id',
-  sessionToken: 'sessionToken',
-  userId: 'userId'
-};
-
-exports.Prisma.FollowOrderByRelevanceFieldEnum = {
-  id: 'id',
-  followerId: 'followerId',
-  followingId: 'followingId'
-};
-
-exports.Prisma.LikeOrderByRelevanceFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  postId: 'postId'
 };
 
 

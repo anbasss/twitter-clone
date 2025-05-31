@@ -14,9 +14,14 @@ const PostView = () => {
   const params = useParams();
   const postId = Array.isArray(params?.postId) ? params.postId[0] : params?.postId as string;
 
-  const { data: post, isLoading: isLoadingPost } = useSWR(
+  const { data: post, isLoading: isLoadingPost, mutate: mutatePost } = useSWR(
     postId ? `/api/posts/${postId}` : null, 
-    fetcher
+    fetcher,
+    {
+      refreshInterval: 0, // Disable automatic polling
+      revalidateOnFocus: false, // Disable revalidation on window focus
+      revalidateOnReconnect: true, // Revalidate on reconnect
+    }
   );
   if (isLoadingPost || !post) {
     return (

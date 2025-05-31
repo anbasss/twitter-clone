@@ -4,10 +4,10 @@ import prisma from "@/libs/prismadb";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { postId: string } }
+  { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const postId = params.postId;
+    const { postId } = await params;
 
     if (!postId || typeof postId !== 'string') {
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });

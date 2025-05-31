@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/libs/auth";
 
 import prisma from "@/libs/prismadb";
 
@@ -13,9 +13,7 @@ export async function GET(req: NextRequest) {
     } catch (e) {
       console.error('Database connection failed:', e);
       return NextResponse.json({ error: "Database connection failed" }, { status: 500 });
-    }
-
-    const posts = await prisma.post.findMany({
+    }    const posts = await prisma.post.findMany({
       include: {
         user: {
           select: {
@@ -25,7 +23,11 @@ export async function GET(req: NextRequest) {
             profileImage: true,
           }
         },
-        comments: true,
+        comments: {
+          select: {
+            id: true, // Only get count, not full comments
+          }
+        },
         likes: {
           select: {
             userId: true,
@@ -34,14 +36,19 @@ export async function GET(req: NextRequest) {
       },
       orderBy: {
         createdAt: 'desc'
-      }
-    });    // Transform the likes array to a likedIds array for easier frontend handling
+      },
+      take: 50, // Limit to 50 posts for better performance
+    });// Transform the likes array to a likedIds array for easier frontend handling
     const formattedPosts = posts.map((post: any) => ({
       ...post,
       likedIds: post.likes.map((like: { userId: string }) => like.userId)
     }));
 
-    return NextResponse.json(formattedPosts);
+    return NextResponse.json(formattedPosts, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59'
+      }
+    });
   } catch (error) {
     console.log(error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

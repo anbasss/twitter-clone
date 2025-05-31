@@ -8,7 +8,8 @@ interface PostFeedProps {
 }
 
 const PostFeed: React.FC<PostFeedProps> = ({ userId }) => {
-  const { data: posts = [], isLoading } = usePosts(userId);
+  const { data: posts = [], isLoading, mutate } = usePosts(userId);
+  
   if (isLoading) {
     return (
       <div className="divide-y divide-neutral-800">

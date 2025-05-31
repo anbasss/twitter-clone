@@ -5,9 +5,11 @@ import { useCallback, useMemo } from 'react';
 import { AiOutlineHeart, AiFillHeart, AiOutlineMessage } from 'react-icons/ai';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { useSession } from 'next-auth/react';
+import { mutate } from 'swr';
 
 import Avatar from '@/components/Avatar';
 import useLoginModal from '@/hooks/useLoginModal';
+import usePosts from '@/hooks/usePosts';
 
 interface PostItemProps {
   data: Record<string, any>;
@@ -18,6 +20,7 @@ const PostItem: React.FC<PostItemProps> = ({ data, userId }) => {
   const router = useRouter();
   const loginModal = useLoginModal();
   const { data: session } = useSession();
+  const { mutate: mutatePosts } = usePosts(userId);
 
   const goToUser = useCallback((event: any) => {
     event.stopPropagation();
@@ -28,7 +31,6 @@ const PostItem: React.FC<PostItemProps> = ({ data, userId }) => {
   const goToPost = useCallback(() => {
     router.push(`/posts/${data.id}`);
   }, [router, data.id]);
-
   const onLike = useCallback(async (event: any) => {
     event.stopPropagation();
 
@@ -37,29 +39,26 @@ const PostItem: React.FC<PostItemProps> = ({ data, userId }) => {
     }
 
     try {
-      const url = hasLiked 
-        ? `/api/like?postId=${data.id}` 
-        : '/api/like';
-      
-      const method = hasLiked ? 'DELETE' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
+      const response = await fetch('/api/like', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: hasLiked ? undefined : JSON.stringify({ postId: data.id })
+        body: JSON.stringify({ postId: data.id })
       });
 
       if (!response.ok) {
         throw new Error('Something went wrong!');
       }
 
-      router.refresh();
+      // Optimistically update the cache instead of router.refresh()
+      mutatePosts();
+      mutate('/api/posts');
+      mutate(`/api/posts/${data.id}`);
     } catch (error) {
       console.log(error);
     }
-  }, [data.id, session, router, loginModal]);
+  }, [data.id, session, loginModal, mutatePosts]);
 
   const createdAt = useMemo(() => {
     if (!data?.createdAt) {
