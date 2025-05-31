@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthContext from "./context/AuthContext";
 import ToasterContext from "./context/ToasterContext";
-import SWRProvider from "./context/SWRContext";
+import SWRProvider from "@/app/context/SWRContext";
 import ModalProvider from "./providers/ModalProvider";
 import Layout from "@/components/layout/Layout";
 
