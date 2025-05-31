@@ -13,10 +13,8 @@ const nextConfig: NextConfig = {
     unoptimized: false,
   },
   
-  // Experimental features for better performance
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'bcrypt']
-  },
+  // External packages for server components
+  serverExternalPackages: ['@prisma/client', 'bcrypt'],
 
   // Webpack configuration to handle file system issues
   webpack: (config, { isServer, dev }) => {
