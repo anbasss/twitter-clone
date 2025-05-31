@@ -19,13 +19,12 @@ const Sidebar = () => {
       icon: BsHouseFill,
       label: "Home",
       href: "/",
-    },
-    {
+    },    {
       icon: BsBellFill,
       label: "Notifications",
       href: "/notifications",
       auth: true,
-      alert: session?.user?.hasNotification,
+      alert: session?.user?.hasNotification || undefined,
     },
     {
       icon: FaUser,
