@@ -17,36 +17,42 @@ export const authOptions: AuthOptions = {
           throw new Error('Invalid credentials');
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        try {
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email
+            }
+          });
+
+          if (!user || !user?.hashedPassword) {
+            throw new Error('Invalid credentials');
           }
-        });
 
-        if (!user || !user?.hashedPassword) {
+          const isCorrectPassword = await bcrypt.compare(
+            credentials.password,
+            user.hashedPassword
+          );
+
+          if (!isCorrectPassword) {
+            throw new Error('Invalid credentials');
+          }
+
+          return user;
+        } catch (error) {
+          console.error('Auth error:', error);
           throw new Error('Invalid credentials');
         }
-
-        const isCorrectPassword = await bcrypt.compare(
-          credentials.password,
-          user.hashedPassword
-        );
-
-        if (!isCorrectPassword) {
-          throw new Error('Invalid credentials');
-        }
-
-        return user;
       }
     })
-  ],  debug: process.env.NODE_ENV === 'development',
+  ],
+  debug: process.env.NODE_ENV === 'development',
   session: {
     strategy: 'jwt',
   },
   jwt: {
-    secret: process.env.NEXTAUTH_JWT_SECRET,
+    secret: process.env.NEXTAUTH_JWT_SECRET || 'fallback-secret-for-build',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-build',
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
