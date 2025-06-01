@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 
-import Header from "@/components/Header";
+import Navbar from "@/components/Navbar";
 import UserHero from "@/components/users/UserHero";
 import UserBio from "@/components/users/UserBio";
 import PostFeed from "@/components/posts/PostFeed";
@@ -16,7 +16,7 @@ const UserProfile = () => {
   if (isLoading) {
     return (
       <div>
-        <Header label="Profile" showBackArrow />
+        <Navbar label="Profile" showBackArrow />
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500"></div>
         </div>
@@ -27,13 +27,13 @@ const UserProfile = () => {
   if (!fetchedUser) {
     return (
       <div>
-        <Header label="Profile" showBackArrow />
+        <Navbar label="Profile" showBackArrow />
         <div className="text-white text-center p-6">User not found</div>
       </div>
     );
   }
   return (
-    <>      <Header label={fetchedUser.name || ""} showBackArrow />
+    <>      <Navbar label={fetchedUser.name || ""} showBackArrow />
       <UserHero 
         userId={fetchedUser.id} 
         coverImage={fetchedUser.coverImage}

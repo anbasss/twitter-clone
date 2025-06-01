@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { ClipLoader } from 'react-spinners';
 
-import Header from '@/components/Header';
+import Navbar from '@/components/Navbar';
 import PostItem from '@/components/posts/PostItem';
 import Form from '@/components/Form';
 import CommentFeed from '@/components/posts/CommentFeed';
@@ -30,10 +30,9 @@ const PostView = () => {
       </div>
     );
   }
-
   return (
     <>
-      <Header label="Tweet" showBackArrow />
+      <Navbar label="Tweet" showBackArrow />
       <PostItem data={post} />
       <Form
         postId={postId}

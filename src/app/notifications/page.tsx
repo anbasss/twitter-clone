@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { BsBellFill, BsHeartFill, BsPersonFill } from 'react-icons/bs';
 import { FaRetweet } from 'react-icons/fa';
 
-import Header from '@/components/Header';
+import Navbar from '@/components/Navbar';
 import useCurrentUser from '@/hooks/useCurrentUser';
 import useNotifications from '@/hooks/useNotifications';
 
@@ -36,11 +36,10 @@ const NotificationsPage = () => {
         console.error('Error marking notifications as read:', error);
       }    };
       markAsRead();
-  }, [router, status, currentUser?.id, mutate]);
-    if (status === 'loading' || isLoading) {
+  }, [router, status, currentUser?.id, mutate]);    if (status === 'loading' || isLoading) {
     return (
       <div className="min-h-screen">
-        <Header label="Notifications" showBackArrow />
+        <Navbar label="Notifications" showBackArrow />
         <div className="flex justify-center items-center h-64">
           <div className="flex flex-col items-center space-y-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500"></div>
@@ -49,10 +48,9 @@ const NotificationsPage = () => {
         </div>
       </div>
     );
-  }
-    return (
+  }    return (
     <div className="min-h-screen">
-      <Header label="Notifications" showBackArrow />
+      <Navbar label="Notifications" showBackArrow />
       <div className="flex flex-col">
         {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-6">
