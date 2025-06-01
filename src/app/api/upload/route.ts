@@ -68,12 +68,17 @@ export async function POST(req: NextRequest) {
       size: file.size,
       originalName: file.name
     });
-
   } catch (error) {
     console.error('Upload error:', error);
+    let errorMessage = 'Failed to upload file';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json({ 
       error: 'Failed to upload file',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     }, { status: 500 });
   }
 }
