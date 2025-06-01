@@ -70,15 +70,15 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Upload error:', error);
-    let errorMessage = 'Failed to upload file';
+    let errorMessage = 'Failed to upload file'; // Versi dari HEAD
     
-    if (error instanceof Error) {
-      errorMessage = error.message;
+    if (error instanceof Error) { // Versi dari HEAD
+      errorMessage = error.message; // Versi dari HEAD
     }
     
     return NextResponse.json({ 
       error: 'Failed to upload file',
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined // Versi dari HEAD
     }, { status: 500 });
   }
 }
