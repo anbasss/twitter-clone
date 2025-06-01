@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "vercel-build": "prisma generate && next build",
+    "debug-deployment": "node -r dotenv/config scripts/debug-deployment.js",
     "check-deployment": "node scripts/check-deployment.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
