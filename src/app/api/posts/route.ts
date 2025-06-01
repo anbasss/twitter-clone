@@ -5,15 +5,16 @@ import { authOptions } from "@/libs/auth";
 import prisma from "@/libs/prismadb";
 
 export async function GET(req: NextRequest) {
-  // No authentication needed for fetching posts
   try {
-    // Verify database connection first
-    try {
-      await prisma.$connect();
-    } catch (e) {
-      console.error('Database connection failed:', e);
-      return NextResponse.json({ error: "Database connection failed" }, { status: 500 });
-    }    const posts = await prisma.post.findMany({
+    // Ensure DATABASE_URL is available
+    if (!process.env.DATABASE_URL) {
+      console.error('❌ DATABASE_URL environment variable is missing');
+      return NextResponse.json({ 
+        error: "Database configuration error" 
+      }, { status: 500 });
+    }
+
+    const posts = await prisma.post.findMany({
       include: {
         user: {
           select: {
@@ -42,16 +43,16 @@ export async function GET(req: NextRequest) {
     const formattedPosts = posts.map((post: any) => ({
       ...post,
       likedIds: post.likes.map((like: { userId: string }) => like.userId)
-    }));
-
-    return NextResponse.json(formattedPosts, {
+    }));    return NextResponse.json(formattedPosts, {
       headers: {
         'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59'
       }
-    });
-  } catch (error) {
-    console.log(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    });  } catch (error: any) {
+    console.error('❌ Error fetching posts:', error);
+    return NextResponse.json({ 
+      error: "Failed to fetch posts",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 });
   }
 }
 
@@ -80,11 +81,11 @@ export async function POST(req: NextRequest) {
         body,
         userId: user.id
       }
-    });
-
-    return NextResponse.json(post, { status: 201 });
-  } catch (error) {
-    console.log(error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    });    return NextResponse.json(post, { status: 201 });  } catch (error: any) {
+    console.error('❌ Error creating post:', error);
+    return NextResponse.json({ 
+      error: "Failed to create post",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 });
   }
 }
