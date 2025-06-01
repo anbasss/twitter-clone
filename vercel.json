@@ -4,7 +4,7 @@
       "ENABLE_EXPERIMENTAL_COREPACK": "1"
     }
   },
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "npx prisma generate && npx next build",
   "installCommand": "npm install",
   "functions": {
     "app/api/**/*.ts": {

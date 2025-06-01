@@ -13,6 +13,24 @@ try {
     throw new Error('Prisma schema not found at prisma/schema.prisma');
   }
 
+  // Check environment variables for production build
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    console.log('🔍 Checking environment variables...');
+    
+    const requiredEnvVars = ['NEXTAUTH_SECRET'];
+    const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+    
+    if (missingVars.length > 0) {
+      console.warn('⚠️ Missing environment variables:', missingVars.join(', '));
+      console.warn('⚠️ Make sure to set these in your deployment platform');
+    }
+    
+    // DATABASE_URL is checked at runtime, not build time
+    if (!process.env.DATABASE_URL) {
+      console.warn('⚠️ DATABASE_URL not set - this is expected during build, will be checked at runtime');
+    }
+  }
+
   console.log('📦 Generating Prisma client...');
   execSync('npx prisma generate', { stdio: 'inherit' });
 
