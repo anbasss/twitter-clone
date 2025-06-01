@@ -4,20 +4,42 @@ import { useState, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { mutate } from "swr";
 
 import useTweetModal from "@/hooks/useTweetModal";
 import useLoginModal from "@/hooks/useLoginModal";
+import useCurrentUser from "@/hooks/useCurrentUser";
 
 import Avatar from "../Avatar";
+import MediaUpload from "../MediaUpload";
 
 const TweetModal = () => {
   const router = useRouter();
   const { data: session } = useSession();
+  const { data: currentUser } = useCurrentUser();
   const tweetModal = useTweetModal();
   const loginModal = useLoginModal();
 
   const [body, setBody] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [media, setMedia] = useState<{ file: File; type: 'image' | 'video' } | null>(null);
+  // Helper function to upload media
+  const uploadMedia = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload media');
+    }
+    
+    const data = await response.json();
+    return data.url;
+  };
 
   const onSubmit = useCallback(async () => {
     try {
@@ -27,12 +49,28 @@ const TweetModal = () => {
         toast.error('Please sign in to tweet');
         loginModal.onOpen();
         return;
-      }      const response = await fetch('/api/posts', {
+      }
+
+      // Upload media if present
+      let mediaUrl = null;
+      let mediaType = null;
+      
+      if (media) {
+        mediaUrl = await uploadMedia(media.file);
+        mediaType = media.type;
+      }
+
+      const requestBody = {
+        body,
+        ...(mediaUrl && { [mediaType === 'image' ? 'image' : 'video']: mediaUrl, mediaType })
+      };
+
+      const response = await fetch('/api/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ body })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -41,6 +79,11 @@ const TweetModal = () => {
 
       toast.success('Tweet created!');
       setBody('');
+      setMedia(null);
+      
+      // Revalidate posts cache
+      mutate('/api/posts');
+      
       router.refresh();
       tweetModal.onClose();
     } catch (error) {
@@ -49,15 +92,14 @@ const TweetModal = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [body, session, router, tweetModal, loginModal]);
-  const bodyContent = (
+  }, [body, media, session, router, tweetModal, loginModal]);  const bodyContent = (
     <div className="flex flex-col gap-4">
       <div className="flex gap-4 items-start">
-        {session?.user && (
+        {currentUser && (
           <div className="flex-shrink-0">
             <Avatar
-              userId={session.user.id || ''}
-              profileImage={session.user.image || null}
+              userId={currentUser.id || ''}
+              profileImage={currentUser.profileImage || null}
             />
           </div>
         )}
@@ -83,10 +125,24 @@ const TweetModal = () => {
             onChange={(e) => setBody(e.target.value)}
           />
           
+          {/* Media Upload */}
+          <div className="mt-4">
+            <MediaUpload
+              value={media}
+              onChange={(file, type) => {
+                if (file && type) {
+                  setMedia({ file, type });
+                } else {
+                  setMedia(null);
+                }
+              }}
+              disabled={isLoading}
+            />
+          </div>
+          
           {/* Character counter and tweet button */}
           <div className="flex items-center justify-between pt-4 border-t border-neutral-800">
             <div className="flex items-center gap-4">
-              {/* Add tweet options here in the future (images, polls, etc.) */}
               <div className="text-neutral-500 text-sm">
                 {body.length > 0 && (
                   <span className={body.length > 280 ? 'text-red-500' : 'text-neutral-500'}>
@@ -98,7 +154,7 @@ const TweetModal = () => {
             
             <button
               onClick={onSubmit}
-              disabled={isLoading || body.trim().length === 0 || body.length > 280}
+              disabled={isLoading || (body.trim().length === 0 && !media) || body.length > 280}
               className="
                 px-6
                 py-2

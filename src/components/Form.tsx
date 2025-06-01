@@ -8,8 +8,10 @@ import { mutate } from "swr";
 
 import Avatar from "./Avatar";
 import Button from "./Button";
+import MediaUpload from "./MediaUpload";
 import useLoginModal from "@/hooks/useLoginModal";
 import useRegisterModal from "@/hooks/useRegisterModal";
+import useCurrentUser from "@/hooks/useCurrentUser";
 import useComments from "@/hooks/useComments";
 import usePosts from "@/hooks/usePosts";
 
@@ -22,6 +24,7 @@ interface FormProps {
 const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
   const router = useRouter();
   const { data: session } = useSession();
+  const { data: currentUser } = useCurrentUser();
   
   const loginModal = useLoginModal();
   const registerModal = useRegisterModal();
@@ -29,23 +32,58 @@ const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
   // Get SWR mutate functions for cache invalidation
   const { mutate: mutateComments } = useComments(postId || '');
   const { mutate: mutatePosts } = usePosts();
-
   const [body, setBody] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [media, setMedia] = useState<{ file: File; type: 'image' | 'video' } | null>(null);
+
+  // Helper function to upload media
+  const uploadMedia = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload media');
+    }
+    
+    const data = await response.json();
+    return data.url;
+  };
+
   const onSubmit = useCallback(async () => {
     try {
       setIsLoading(true);
 
       if (!session) {
         return loginModal.onOpen();
+      }      const url = isComment ? `/api/comments?postId=${postId}` : '/api/posts';
+      
+      // Upload media if present
+      let mediaUrl = null;
+      let mediaType = null;
+      
+      if (media && !isComment) { // Only allow media in posts, not comments
+        try {
+          mediaUrl = await uploadMedia(media.file);
+          mediaType = media.type;
+        } catch (error) {
+          toast.error('Failed to upload media');
+          setIsLoading(false);
+          return;
+        }
       }
-
-      const url = isComment ? `/api/comments?postId=${postId}` : '/api/posts';
       
       // Create optimistic update data
       const optimisticData = {
         id: `temp-${Date.now()}`, // Temporary ID for optimistic update
         body,
+        image: mediaType === 'image' ? mediaUrl : null,
+        video: mediaType === 'video' ? mediaUrl : null,
+        mediaType,
         userId: session.user?.id,
         user: {
           id: session.user?.id,
@@ -69,17 +107,21 @@ const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
         mutatePosts((currentPosts: any) => {
           return currentPosts ? [optimisticData, ...currentPosts] : [optimisticData];
         }, { revalidate: false });
-      }
-
-      // Clear form immediately for better UX
+      }      // Clear form immediately for better UX
       setBody('');
+      setMedia(null);
+      
+      const requestBody = {
+        body,
+        ...(mediaUrl && { [mediaType === 'image' ? 'image' : 'video']: mediaUrl, mediaType })
+      };
       
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ body })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -111,20 +153,20 @@ const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
       } else {
         mutatePosts();
       }
-      
-      // Restore body text on error
+        // Restore form data on error
       setBody(body);
+      setMedia(media);
     } finally {
       setIsLoading(false);
     }
-  }, [body, isComment, postId, session, loginModal, mutateComments, mutatePosts]);
+  }, [body, media, isComment, postId, session, loginModal, mutateComments, mutatePosts]);
   return (
     <div className="border-b-[1px] border-neutral-800 px-4 sm:px-6 py-4">
       {session ? (
-        <div className="flex flex-row gap-3 sm:gap-4">
-          <div className="flex-shrink-0">            <Avatar 
-              userId={session.user?.id || ''} 
-              profileImage={session.user?.image || null} 
+        <div className="flex flex-row gap-3 sm:gap-4">          <div className="flex-shrink-0">
+            <Avatar 
+              userId={currentUser?.id || ''} 
+              profileImage={currentUser?.profileImage || null} 
             />
           </div>
           <div className="w-full min-w-0">
@@ -147,8 +189,7 @@ const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
                 placeholder-neutral-500 
                 text-white
                 min-h-[80px]
-                sm:min-h-[100px]
-              "
+                sm:min-h-[100px]              "
               placeholder={placeholder}
             ></textarea>
             <hr 
@@ -162,9 +203,24 @@ const Form: React.FC<FormProps> = ({ placeholder, isComment, postId }) => {
                 duration-200
               "
             />
+            {!isComment && (
+              <div className="mt-4">
+                <MediaUpload
+                  value={media}
+                  onChange={(file, type) => {
+                    if (file && type) {
+                      setMedia({ file, type });
+                    } else {
+                      setMedia(null);
+                    }
+                  }}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
             <div className="mt-4 flex flex-row justify-end">
               <Button 
-                disabled={isLoading || !body} 
+                disabled={isLoading || (!body && !media)} 
                 onClick={onSubmit} 
                 label={isComment ? "Reply" : "Post"}
               />

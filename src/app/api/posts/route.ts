@@ -62,9 +62,8 @@ export async function POST(req: NextRequest) {
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   try {
-    const { body } = await req.json();
+    const { body, image, video, mediaType } = await req.json();
 
     const user = await prisma.user.findUnique({
       where: {
@@ -79,9 +78,12 @@ export async function POST(req: NextRequest) {
     const post = await prisma.post.create({
       data: {
         body,
+        image: image || null,
+        video: video || null,
+        mediaType: mediaType || null,
         userId: user.id
       }
-    });    return NextResponse.json(post, { status: 201 });  } catch (error: any) {
+    });return NextResponse.json(post, { status: 201 });  } catch (error: any) {
     console.error('❌ Error creating post:', error);
     return NextResponse.json({ 
       error: "Failed to create post",

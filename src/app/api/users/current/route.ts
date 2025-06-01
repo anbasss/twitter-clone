@@ -10,7 +10,11 @@ export async function GET(req: NextRequest) {
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  try {    const currentUser = await prisma.user.findUnique({
+
+  try {
+    console.log('🔍 Fetching current user for email:', session.user.email);
+    
+    const currentUser = await prisma.user.findUnique({
       where: {
         email: session.user.email,
       },
@@ -33,9 +37,14 @@ export async function GET(req: NextRequest) {
       }
     });
 
+    console.log('🔍 Current user query result:', currentUser);
+
     if (!currentUser) {
+      console.log('❌ User not found in database');
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+
+    console.log('✅ User found, transforming data...');
 
     // Transform the following relation to a simple array of IDs for compatibility
     const userWithFollowingIds = {
@@ -46,6 +55,7 @@ export async function GET(req: NextRequest) {
     // Remove the original following array since we've transformed it
     delete (userWithFollowingIds as any).following;
 
+    console.log('✅ Returning user data:', { id: userWithFollowingIds.id, email: userWithFollowingIds.email });
     return NextResponse.json(userWithFollowingIds);
   } catch (error) {
     console.error("Error fetching current user:", error);

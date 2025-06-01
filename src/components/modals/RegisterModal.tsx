@@ -27,10 +27,41 @@ const RegisterModal = () => {
 
     registerModal.onClose();
     loginModal.onOpen();
-  }, [isLoading, registerModal, loginModal]);
-  const onSubmit = useCallback(async () => {
+  }, [isLoading, registerModal, loginModal]);  const onSubmit = useCallback(async () => {
     try {
       setIsLoading(true);
+
+      // Validasi email di frontend
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        toast.error('Please enter a valid email address');
+        return;
+      }
+
+      // Validasi bahwa email bukan hanya string biasa
+      if (!email.includes('@') || !email.includes('.')) {
+        toast.error('Email must contain @ and a valid domain');
+        return;
+      }
+
+      // Validasi password
+      if (password.length < 6) {
+        toast.error('Password must be at least 6 characters long');
+        return;
+      }
+
+      // Validasi username
+      const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+      if (!usernameRegex.test(username)) {
+        toast.error('Username must be 3-20 characters and contain only letters, numbers, and underscores');
+        return;
+      }
+
+      // Validasi name
+      if (name.length < 2) {
+        toast.error('Name must be at least 2 characters long');
+        return;
+      }
 
       // Register user
       const response = await fetch('/api/register', {
@@ -46,7 +77,7 @@ const RegisterModal = () => {
         })
       });
 
-      const data = await response.json();      if (!response.ok) {
+      const data = await response.json();if (!response.ok) {
         toast.error(data.error || 'Something went wrong');
         return;
       }
@@ -66,29 +97,29 @@ const RegisterModal = () => {
       setIsLoading(false);
     }
   }, [registerModal, email, password, username, name]);
-
   const bodyContent = (
     <div className="flex flex-col gap-4">
       <Input
-        placeholder="Email"
+        placeholder="Email (example@domain.com)"
+        type="email"
         onChange={(e) => setEmail(e.target.value)}
         value={email}
         disabled={isLoading}  
       />
       <Input
-        placeholder="Name"
+        placeholder="Full Name"
         onChange={(e) => setName(e.target.value)}
         value={name}
         disabled={isLoading}  
       />
       <Input
-        placeholder="Username"
+        placeholder="Username (letters, numbers, underscore only)"
         onChange={(e) => setUsername(e.target.value)}
         value={username}
         disabled={isLoading}  
       />
       <Input
-        placeholder="Password"
+        placeholder="Password (minimum 6 characters)"
         type="password"
         onChange={(e) => setPassword(e.target.value)}
         value={password}

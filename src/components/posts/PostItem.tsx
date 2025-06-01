@@ -6,6 +6,7 @@ import { AiOutlineHeart, AiFillHeart, AiOutlineMessage } from 'react-icons/ai';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { mutate } from 'swr';
+import Image from 'next/image';
 
 import Avatar from '@/components/Avatar';
 import useLoginModal from '@/hooks/useLoginModal';
@@ -126,10 +127,37 @@ const PostItem: React.FC<PostItemProps> = ({ data, userId }) => {
             <span className="text-neutral-500 text-xs sm:text-sm flex-shrink-0">
               · {createdAt}
             </span>
-          </div>
-          <div className="text-white text-sm sm:text-base leading-relaxed mb-3">
+          </div>          <div className="text-white text-sm sm:text-base leading-relaxed mb-3">
             {data.body}
           </div>
+          
+          {/* Media Display */}
+          {data.image && (
+            <div className="mb-4 rounded-lg overflow-hidden border border-neutral-700">
+              <Image
+                src={data.image}
+                alt="Post image"
+                width={500}
+                height={300}
+                className="w-full h-auto max-h-96 object-cover cursor-pointer"
+                onClick={goToPost}
+              />
+            </div>
+          )}
+          
+          {data.video && (
+            <div className="mb-4 rounded-lg overflow-hidden border border-neutral-700">
+              <video
+                src={data.video}
+                controls
+                className="w-full h-auto max-h-96"
+                preload="metadata"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          )}
+          
           <div className="flex flex-row items-center gap-8 sm:gap-12">
             <div 
               className="

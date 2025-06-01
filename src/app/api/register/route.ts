@@ -8,10 +8,45 @@ export async function POST(req: NextRequest) {
 
     console.log('Registration attempt:', { email, username, name });
 
+    // Validasi input fields
     if (!email || !username || !name || !password) {
       console.log('Missing fields:', { email: !!email, username: !!username, name: !!name, password: !!password });
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Validasi format email yang ketat
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid email address' },
+        { status: 400 }
+      );
+    }
+
+    // Validasi bahwa email bukan hanya string biasa (harus ada @ dan domain)
+    if (!email.includes('@') || !email.includes('.') || email.split('@').length !== 2) {
+      return NextResponse.json(
+        { error: 'Email must be a valid email address with @ and domain' },
+        { status: 400 }
+      );
+    }
+
+    // Validasi panjang dan format password
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters long' },
+        { status: 400 }
+      );
+    }
+
+    // Validasi username (hanya alphanumeric dan underscore)
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      return NextResponse.json(
+        { error: 'Username must be 3-20 characters long and contain only letters, numbers, and underscores' },
         { status: 400 }
       );
     }

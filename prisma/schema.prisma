@@ -12,7 +12,7 @@ model User {
   name            String?
   username        String?        @unique
   bio             String?
-  email           String?        @unique
+  email           String         @unique // Made required and must be unique
   emailVerified   DateTime?
   image           String?
   coverImage      String?
@@ -37,6 +37,9 @@ model User {
 model Post {
   id        String    @id @default(cuid())
   body      String
+  image     String?   // URL untuk gambar
+  video     String?   // URL untuk video
+  mediaType String?   // "image", "video", atau null
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   userId    String
